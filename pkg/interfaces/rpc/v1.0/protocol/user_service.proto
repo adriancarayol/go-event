@@ -1,0 +1,15 @@
+syntax="proto3";
+
+package protocol;
+
+service UserService {
+    rpc RegisterUser(RegisterUserRequestType) returns (RegisterUserResponseType);
+}
+
+message RegisterUserRequestType {
+    string email = 1;
+}
+
+message RegisterUserResponseType {
+    string message = 1;
+}
