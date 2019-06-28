@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/adriancarayol/go-event/config/db"
+	"github.com/adriancarayol/go-event/config/rabbit"
 	"github.com/adriancarayol/go-event/pkg/interfaces/registry"
 	"github.com/adriancarayol/go-event/pkg/usecases"
 	"log"
@@ -9,6 +10,7 @@ import (
 
 func main() {
 	db.Init()
+	rabbit.Init()
 
 	container, err := registry.NewContainer()
 	if err != nil {
@@ -20,5 +22,9 @@ func main() {
 
 	if err != nil {
 		log.Fatalf("Error registering user: %s", err)
+	}
+
+	if err := db.GetDB().Close(); err != nil {
+		log.Fatal("Error closing DB: %s", err)
 	}
 }

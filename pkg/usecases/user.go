@@ -1,6 +1,8 @@
 package usecases
 
 import (
+	"github.com/adriancarayol/go-event/pkg/dao"
+	"github.com/adriancarayol/go-event/pkg/domain"
 	"github.com/adriancarayol/go-event/pkg/domain/commands"
 	"github.com/adriancarayol/go-event/pkg/domain/model"
 	"github.com/adriancarayol/go-event/pkg/domain/repository"
@@ -16,13 +18,15 @@ type UserUseCase interface {
 type userUseCase struct {
 	repo       repository.UserRepository
 	eventStore repository.EventStore
+	eventBus   domain.EventBus
 	service    *service.UserService
 }
 
-func NewUserUsecase(repo repository.UserRepository, eventStore repository.EventStore, service *service.UserService) *userUseCase {
+func NewUserUsecase(repo repository.UserRepository, eventStore repository.EventStore, eventBus domain.EventBus, service *service.UserService) *userUseCase {
 	return &userUseCase{
 		repo:       repo,
 		eventStore: eventStore,
+		eventBus:   eventBus,
 		service:    service,
 	}
 }
@@ -70,6 +74,28 @@ func (u *userUseCase) RegisterUser(email, username, password string) error {
 
 	if err != nil {
 		return err
+	}
+
+	for _, event := range user.Events {
+		var eventDao dao.Event
+
+		payload, err := event.Data.Value()
+
+		if err != nil {
+			return err
+		}
+
+		data := payload.([]byte)
+		eventDao.ID = event.ID
+		eventDao.AggregateID = event.AggregateID
+		eventDao.AggregateType = event.AggregateType
+		eventDao.Version = event.Version
+		eventDao.Type = string(event.Type)
+		eventDao.Data = string(data)
+
+		if err := u.eventBus.Publish(eventDao); err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -40,6 +40,7 @@ func (c *Container) Clean() error {
 func buildUserUseCase(ctn di.Container) (interface{}, error) {
 	repo := interfaces.NewUserRepository()
 	eventStore := interfaces.NewEventStore()
-	userService := service.NewUserService(repo, eventStore)
-	return usecases.NewUserUsecase(repo, eventStore, userService), nil
+	eventBus := interfaces.NewEventBus()
+	userService := service.NewUserService(repo)
+	return usecases.NewUserUsecase(repo, eventStore, eventBus, userService), nil
 }
